@@ -1,142 +1,231 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+.pageWrapper {
+  min-height: 100vh;
+  padding-top: 72px; /* Space for navbar */
 }
 
 .main {
-  display: flex;
-  flex: 1;
   width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
 }
 
-.intro {
+/* Hero Section */
+.heroSection {
+  padding: 80px 0 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroContent {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 64px;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.badgeIcon {
+  color: #ffbd2e;
+}
+
+.title {
+  font-size: 4rem;
+  line-height: 1.1;
+  font-weight: 800;
+  margin-bottom: 24px;
+  color: var(--foreground);
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--foreground-muted);
+  margin-bottom: 40px;
+  max-width: 600px;
+}
+
+.ctaGroup {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mockup Window */
+.heroImageContainer {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.mockupWindow {
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08);
+}
+
+.mockupHeader {
+  height: 48px;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
   gap: 8px;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.mockupBody {
+  padding: 24px;
+  background: #f1f3f5;
+  aspect-ratio: 16 / 9;
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
+.mockupPlaceholder {
+  display: flex;
+  gap: 24px;
+  height: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+.mockupSidebar {
+  flex: 0 0 240px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.mockupSlide {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.skeletonText {
+  height: 12px;
+  background: #e9ecef;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.skeletonBox {
+  height: 80px;
+  background: #e9ecef;
+  border-radius: 6px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Features Section */
+.featuresSection {
+  padding: 120px 0;
+  background: white;
+  border-top: 1px solid var(--border);
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.sectionHeader h2 {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+}
+
+.sectionHeader p {
+  font-size: 1.1rem;
+  color: var(--foreground-muted);
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.featureCard {
+  background: var(--background);
+  padding: 32px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-light);
+}
+
+.featureIcon {
+  width: 56px;
+  height: 56px;
+  background: var(--primary-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.featureCard h3 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.featureCard p {
+  color: var(--foreground-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
   }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  
+  .heroSection {
+    padding: 60px 0;
+  }
+  
+  .ctaGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .ctaGroup button {
+    width: 100%;
+  }
+  
+  .mockupPlaceholder {
+    flex-direction: column;
+  }
+  
+  .mockupSidebar {
+    display: none;
   }
 }

@@ -1,0 +1,85 @@
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+}
+
+.header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoMark {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--primary), #b3121f);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+}
+
+.nav {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+.navItem.active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.footer {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.logoutBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background: #fff5f5;
+  color: var(--primary);
+}

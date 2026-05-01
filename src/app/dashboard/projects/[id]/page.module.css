@@ -1,0 +1,384 @@
+.editorContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--background);
+  /* The layout wrapper inside dashboard has padding, 
+     but for a full-screen editor, we might want to override that, 
+     or just let it fill the available space. 
+     Since this is inside the dashboard mainContent which has padding, 
+     let's override standard behavior for the editor to look like a real app. */
+  margin: -40px; /* Counteract the padding of the layout */
+  width: calc(100% + 80px);
+}
+
+.editorHeader {
+  height: 60px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.documentTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.saveStatus {
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+}
+
+.headerCenter {
+  display: flex;
+  gap: 8px;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: var(--foreground-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+.headerRight {
+  display: flex;
+  gap: 12px;
+}
+
+.secondaryBtn {
+  background: white;
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  background: var(--surface-hover);
+}
+
+.primaryBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.primaryBtn:hover {
+  background: var(--primary-hover);
+}
+
+.editorBody {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.toolbarLeft {
+  width: 72px;
+  background: white;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 16px;
+}
+
+.toolBtn {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  width: 56px;
+  transition: all 0.2s ease;
+}
+
+.toolBtn:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+
+.toolBtn.active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Thumbnails */
+.slideThumbnails {
+  width: 200px;
+  background: #f8f9fa;
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.thumbnailWrapper {
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.slideNumber {
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  padding-top: 4px;
+}
+
+.thumbnail {
+  flex: 1;
+  aspect-ratio: 16 / 9;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+}
+
+.thumbnailWrapper.active .thumbnail {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.addSlideBtn {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--foreground-muted);
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addSlideBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* Canvas Area */
+.canvasArea {
+  flex: 1;
+  background: #e9ecef;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvasWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow: auto;
+}
+
+.slideCanvas {
+  width: 960px;
+  height: 540px;
+  background: white;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.canvasElement {
+  position: absolute;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.canvasElement:hover {
+  outline: 1px dashed var(--primary);
+}
+
+.canvasElementBox {
+  position: absolute;
+  cursor: pointer;
+}
+
+.canvasElementBox:hover {
+  outline: 2px dashed var(--primary);
+}
+
+.canvasControls {
+  height: 40px;
+  background: white;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+}
+
+/* Properties Sidebar */
+.propertiesSidebar {
+  width: 280px;
+  background: white;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.propertiesTabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabBtn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 16px;
+  font-weight: 500;
+  color: var(--foreground-muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tabBtn.active {
+  color: var(--foreground);
+  border-bottom-color: var(--primary);
+}
+
+.propertiesContent {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.propertyGroup h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--foreground-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.select, .input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: #f8f9fa;
+  margin-bottom: 12px;
+}
+
+.select:focus, .input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.buttonGroup {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 8px;
+}
+
+.colorPicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.colorSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.colorHex {
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.inputLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.inputLabel span {
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+  width: 16px;
+}
+
+.inputLabel input {
+  margin-bottom: 0;
+}

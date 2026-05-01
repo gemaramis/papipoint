@@ -1,0 +1,75 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.navContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoMark {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--primary), #b3121f);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+}
+
+.navLinks {
+  display: flex;
+  gap: 32px;
+}
+
+.navLink {
+  color: var(--foreground-muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.navLink:hover {
+  color: var(--primary);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.loginBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.loginBtn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .navLinks {
+    display: none;
+  }
+}

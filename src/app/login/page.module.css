@@ -1,0 +1,116 @@
+.authContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.backLinkWrapper {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--primary);
+}
+
+.authCard {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+}
+
+.logoMarkWrapper {
+  margin-bottom: 24px;
+}
+
+.logoMark {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary), #b3121f);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(230, 57, 70, 0.3);
+}
+
+.title {
+  font-size: 1.75rem;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--foreground-muted);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputGroup label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.inputGroup input {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f8f9fa;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.inputGroup input:focus {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+}
+
+.footerText {
+  margin-top: 24px;
+  font-size: 0.9rem;
+  color: var(--foreground-muted);
+}
+
+.link {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

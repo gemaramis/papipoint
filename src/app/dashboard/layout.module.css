@@ -1,0 +1,24 @@
+.dashboardContainer {
+  display: flex;
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 280px; /* Sidebar width */
+  padding: 40px;
+}
+
+.contentInner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 24px;
+    padding-top: 80px; /* Space for mobile header if needed */
+  }
+}

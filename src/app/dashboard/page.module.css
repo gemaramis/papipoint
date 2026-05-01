@@ -1,0 +1,126 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--foreground-muted);
+  font-size: 1.1rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.statCard {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+}
+
+.statIconWrapper {
+  width: 56px;
+  height: 56px;
+  background: var(--primary-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIcon {
+  color: var(--primary);
+}
+
+.statInfo h3 {
+  font-size: 0.95rem;
+  color: var(--foreground-muted);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  font-size: 1.5rem;
+}
+
+.viewAll {
+  color: var(--primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.viewAll:hover {
+  text-decoration: underline;
+}
+
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.projectCard {
+  background: white;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.projectCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+
+.projectPreview {
+  height: 160px;
+  background: #f1f3f5;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.placeholderSlide {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.projectInfo {
+  padding: 16px;
+}
+
+.projectInfo h4 {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.projectInfo p {
+  font-size: 0.85rem;
+  color: var(--foreground-muted);
+}
