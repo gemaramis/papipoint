@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MdTextFields, 
   MdImage, 
@@ -21,15 +21,26 @@ import {
 import styles from './page.module.css';
 
 export default function EditorPage({ params }: { params: { id: string } }) {
-  const [activeSlide, setActiveSlide] = useState(1);
+  const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState('design');
+  const [projectData, setProjectData] = useState<any>(null);
+
+  useEffect(() => {
+    // Load AI data if we just created a new project
+    const storedData = sessionStorage.getItem('current_project_data');
+    if (storedData) {
+      setProjectData(JSON.parse(storedData));
+    }
+  }, []);
+
+  const currentSlideData = projectData?.slides?.[activeSlide];
 
   return (
     <div className={styles.editorContainer}>
       {/* Editor Header */}
       <header className={styles.editorHeader}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.documentTitle}>Q3 Marketing Plan - AI Generated</h1>
+          <h1 className={styles.documentTitle}>{projectData ? projectData.title : 'Q3 Marketing Plan - AI Generated'}</h1>
           <span className={styles.saveStatus}>Saved just now</span>
         </div>
         <div className={styles.headerCenter}>
@@ -69,13 +80,13 @@ export default function EditorPage({ params }: { params: { id: string } }) {
 
         {/* Slides Navigation (Thumbnails) */}
         <aside className={styles.slideThumbnails}>
-          {[1, 2, 3, 4, 5].map((slide) => (
+          {(projectData?.slides || [1, 2, 3, 4, 5]).map((slide: any, idx: number) => (
             <div 
-              key={slide} 
-              className={`${styles.thumbnailWrapper} ${activeSlide === slide ? styles.active : ''}`}
-              onClick={() => setActiveSlide(slide)}
+              key={idx} 
+              className={`${styles.thumbnailWrapper} ${activeSlide === idx ? styles.active : ''}`}
+              onClick={() => setActiveSlide(idx)}
             >
-              <span className={styles.slideNumber}>{slide}</span>
+              <span className={styles.slideNumber}>{idx + 1}</span>
               <div className={styles.thumbnail}></div>
             </div>
           ))}
@@ -86,10 +97,32 @@ export default function EditorPage({ params }: { params: { id: string } }) {
         <main className={styles.canvasArea}>
           <div className={styles.canvasWrapper}>
             <div className={styles.slideCanvas}>
-              {/* Example elements on the slide */}
-              <div className={styles.canvasElement} style={{ top: '15%', left: '10%', fontSize: '48px', fontWeight: 800 }}>
-                Quarterly Marketing Review
-              </div>
+              {currentSlideData ? (
+                <>
+                  <div className={styles.canvasElement} style={{ top: '15%', left: '10%', fontSize: '48px', fontWeight: 800 }}>
+                    {currentSlideData.title}
+                  </div>
+                  {currentSlideData.subtitle && (
+                    <div className={styles.canvasElement} style={{ top: '35%', left: '10%', fontSize: '24px', color: 'var(--foreground-muted)' }}>
+                      {currentSlideData.subtitle}
+                    </div>
+                  )}
+                  {currentSlideData.bullets && currentSlideData.bullets.length > 0 && (
+                    <div className={styles.canvasElementBox} style={{ top: '50%', left: '10%', width: '80%', height: '40%', background: '#f1f3f5', borderRadius: '12px' }}>
+                      <ul style={{ padding: '24px', fontSize: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {currentSlideData.bullets.map((bullet: string, i: number) => (
+                          <li key={i}>{bullet}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Fallback Example elements */}
+                  <div className={styles.canvasElement} style={{ top: '15%', left: '10%', fontSize: '48px', fontWeight: 800 }}>
+                    Quarterly Marketing Review
+                  </div>
               <div className={styles.canvasElement} style={{ top: '35%', left: '10%', fontSize: '24px', color: 'var(--foreground-muted)' }}>
                 Analyzing Q3 Performance & Q4 Strategy
               </div>
@@ -103,6 +136,8 @@ export default function EditorPage({ params }: { params: { id: string } }) {
                   <li>Retention up to 92%</li>
                 </ul>
               </div>
+                </>
+              )}
             </div>
           </div>
           
