@@ -21,6 +21,16 @@ const MODELS: Record<string, { id: string; isVision: boolean; label: string }> =
   'vision': { id: 'anthropic/claude-3.5-sonnet', isVision: true, label: 'Claude 3.5 Sonnet (Vision)' },
 };
 
+interface AIResponse {
+  title?: string;
+  slides?: Array<{
+    title?: string;
+    subtitle?: string;
+    bullets?: string[];
+    imagePrompt?: string;
+  }>;
+}
+
 const DEFAULT_MODEL = 'sonnet';
 
 // ── Prompt Builder ────────────────────────────────────────────────────────────
@@ -110,6 +120,7 @@ async function callOpenRouter(
   userPrompt: string,
   base64Image?: string
 ): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userContent: any = base64Image
     ? [
       { type: 'text', text: userPrompt },
@@ -173,8 +184,9 @@ async function callWithFallback(
       console.log(`[Papipoint] Trying model: ${model.id}`);
       const result = await callOpenRouter(apiKey, model.id, systemPrompt, userPrompt, base64Image);
       if (result) return result;
-    } catch (err: any) {
-      lastError = err.message || String(err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      lastError = errorMessage;
       console.warn(`[Papipoint] Model ${model.id} failed:`, lastError);
       // Continue to next fallback
     }
@@ -206,21 +218,24 @@ export async function POST(request: Request) {
 
     // ── 1. Extract text from PPTX ───────────────────────────
     const buffer = Buffer.from(await file.arrayBuffer());
-    let rawText: any = '';
+    let rawText: unknown = '';
     try {
       rawText = await parseOffice(buffer);
-      if (typeof rawText !== 'string') rawText = JSON.stringify(rawText);
+      if (typeof rawText !== 'string') {
+        rawText = JSON.stringify(rawText);
+      }
     } catch {
       return NextResponse.json({ detail: 'Failed to extract text from PPTX. The file may be corrupted.' }, { status: 400 });
     }
 
-    if (!rawText?.trim()) {
+    const rawTextStr = rawText as string;
+    if (!rawTextStr?.trim()) {
       return NextResponse.json({ detail: 'No readable text found in this presentation.' }, { status: 400 });
     }
 
     // ── 2a. Manual mode — no AI ─────────────────────────────
     if (mode === 'manual') {
-      const chunks = rawText.split(/\n\s*\n/).filter((c: string) => c.trim().length > 0);
+      const chunks = rawTextStr.split(/\n\s*\n/).filter((c: string) => c.trim().length > 0);
       const slides = chunks.map((chunk: string, i: number) => {
         const lines = chunk.split('\n').filter((l: string) => l.trim().length > 0);
         return {
@@ -248,7 +263,7 @@ export async function POST(request: Request) {
     }
 
     const systemPrompt = buildSystemPrompt();
-    const userPrompt = buildUserPrompt(goal, instructions, visionNote, rawText, persona);
+    const userPrompt = buildUserPrompt(goal, instructions, visionNote, rawTextStr, persona);
 
     let rawJson = await callWithFallback(
       apiKey,
@@ -269,9 +284,9 @@ export async function POST(request: Request) {
       try { rawJson = JSON.parse(rawJson); } catch { /* ignore */ }
     }
 
-    let parsedJson: any;
+    let parsedJson: AIResponse;
     try {
-      parsedJson = JSON.parse(rawJson);
+      parsedJson = JSON.parse(rawJson) as AIResponse;
     } catch {
       console.error('AI returned invalid JSON:', rawJson.substring(0, 600));
       return NextResponse.json({
@@ -286,8 +301,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(parsedJson);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     console.error('API Route Error:', error);
-    return NextResponse.json({ detail: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ detail: errorMessage }, { status: 500 });
   }
 }

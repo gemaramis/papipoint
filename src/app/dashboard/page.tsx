@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +9,6 @@ import {
   MdAdd,
   MdFileUpload,
   MdAccessTime,
-  MdRefresh,
   MdLayers,
   MdAutoAwesome,
   MdPictureAsPdf,
@@ -39,6 +40,21 @@ const STEPS_MANUAL: LoadStep[] = [
   { label: 'Organising', detail: 'Building your slides for the editor…', weight: 30 },
 ];
 
+interface PdfSlide {
+  title?: string;
+  subtitle?: string;
+  bullets?: string[];
+}
+
+interface PdfData {
+  title?: string;
+  slides?: PdfSlide[];
+}
+
+type AiModel = 'sonnet' | 'gpt4o' | 'o1pro' | 'deepseek' | 'kimi' | 'gemma4' | 'llama' | 'qwen' | 'hunyuan';
+
+type Persona = 'corporate' | 'creative' | 'tech' | 'minimalist';
+
 // Helper: compute cumulative start % for each step
 function stepStartPct(steps: LoadStep[], idx: number) {
   return steps.slice(0, idx).reduce((s, st) => s + st.weight, 0);
@@ -60,15 +76,14 @@ export default function DashboardOverview() {
   const [redesignInstructions, setRedesignInstructions] = React.useState('');
   const [referenceImage, setReferenceImage] = React.useState<File | null>(null);
   const [outputFormat, setOutputFormat] = React.useState<'editor' | 'pdf'>('editor');
-  const [aiModel, setAiModel] = React.useState<'sonnet' | 'gpt4o' | 'o1pro' | 'deepseek' | 'kimi' | 'gemma4' | 'llama' | 'qwen' | 'hunyuan'>('sonnet');
-  const [persona, setPersona] = React.useState<'corporate' | 'creative' | 'tech' | 'minimalist'>('corporate');
-  const [customApiKey, setCustomApiKey] = React.useState('');
-
-  // Load custom key from localStorage on mount
-  React.useEffect(() => {
-    const savedKey = localStorage.getItem('papipoint_custom_key');
-    if (savedKey) setCustomApiKey(savedKey);
-  }, []);
+  const [aiModel, setAiModel] = React.useState<AiModel>('sonnet');
+  const [persona, setPersona] = React.useState<Persona>('corporate');
+  const [customApiKey, setCustomApiKey] = React.useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('papipoint_custom_key') || '';
+    }
+    return '';
+  });
 
   // Save custom key
   const saveCustomKey = (key: string) => {
@@ -92,7 +107,7 @@ export default function DashboardOverview() {
   };
 
   // ----- PDF generation (client-side) -----
-  const generateAndDownloadPDF = async (data: any) => {
+  const generateAndDownloadPDF = async (data: PdfData) => {
     const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
 
@@ -127,7 +142,7 @@ export default function DashboardOverview() {
     };
 
     // ── Title / Closing slide (Modern Design) ─────────────────
-    const drawTitleSlide = (slide: any, idx: number, total: number) => {
+    const drawTitleSlide = (slide: PdfSlide) => {
       // Modern gradient background
       for (let i = 0; i < H; i += 30) {
         const alpha = i / H;
@@ -177,7 +192,7 @@ export default function DashboardOverview() {
     };
 
     // ── Content slide (Modern Design) ─────────────────
-    const drawContentSlide = (slide: any, idx: number, total: number) => {
+    const drawContentSlide = (slide: PdfSlide, idx: number, total: number) => {
       // Clean white background
       fill('light'); doc.rect(0, 0, W, H, 'F');
 
@@ -217,7 +232,7 @@ export default function DashboardOverview() {
         doc.setFontSize(14);
         doc.setFont('helvetica', 'normal');
 
-        slide.bullets.forEach((b: string, bulletIdx: number) => {
+        slide.bullets.forEach((b: string) => {
           if (cur > H - 40) return;
 
           // Modern bullet point (circle)
@@ -257,7 +272,7 @@ export default function DashboardOverview() {
       if (idx > 0) doc.addPage();
 
       const isTitle = idx === 0 || idx === slides.length - 1;
-      if (isTitle) drawTitleSlide(slide, idx, slides.length);
+      if (isTitle) drawTitleSlide(slide);
       else drawContentSlide(slide, idx, slides.length);
     }
 
@@ -318,8 +333,10 @@ export default function DashboardOverview() {
       if (referenceImage) formData.append('referenceImage', referenceImage);
     }
 
-    const customKey = localStorage.getItem('papipoint_custom_key');
-    if (customKey) formData.append('custom_api_key', customKey);
+    if (typeof window !== 'undefined') {
+      const customKey = localStorage.getItem('papipoint_custom_key');
+      if (customKey) formData.append('custom_api_key', customKey);
+    }
 
     try {
       const response = await fetch('/api/process-pptx', { method: 'POST', body: formData });
@@ -341,10 +358,11 @@ export default function DashboardOverview() {
         sessionStorage.setItem('current_project_data', JSON.stringify(aiData));
         setTimeout(() => router.push('/dashboard/projects/new'), 500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       clearInterval(progressInterval);
       console.error('Upload error:', error);
-      alert(`Error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      alert(`Error: ${errorMessage}`);
       setIsUploading(false);
     }
   };
@@ -358,6 +376,7 @@ export default function DashboardOverview() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Welcome back, Jane</h1>
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
           <p className={styles.subtitle}>Here's an overview of your presentations.</p>
         </div>
 
@@ -486,7 +505,7 @@ export default function DashboardOverview() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setAiModel(key as any)}
+                  onClick={() => setAiModel(key as AiModel)}
                   className={aiModel === key ? styles.formatBtnActive : styles.formatBtn}
                   style={{ justifyContent: 'flex-start', gap: 10, padding: '10px 14px' }}
                 >
@@ -511,7 +530,7 @@ export default function DashboardOverview() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setPersona(key as any)}
+                  onClick={() => setPersona(key as Persona)}
                   className={persona === key ? styles.formatBtnActive : styles.formatBtn}
                   style={{ justifyContent: 'flex-start', gap: 10, padding: '10px 14px' }}
                 >

@@ -10,39 +10,54 @@ import {
   MdUndo,
   MdRedo,
   MdPlayArrow,
-  MdFormatBold,
-  MdFormatItalic,
-  MdFormatAlignLeft,
-  MdFormatAlignCenter,
-  MdFormatAlignRight,
-  MdPalette,
   MdAutoAwesome
 } from 'react-icons/md';
 import styles from './page.module.css';
 
-export default function EditorPage({ params }: { params: { id: string } }) {
+interface Slide {
+  imagePrompt?: string;
+  imageSrc?: string;
+  title?: string;
+  subtitle?: string;
+  bullets?: string[];
+}
+
+interface ProjectData {
+  title?: string;
+  slides?: Slide[];
+}
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+export default function EditorPage({ params }: { params: Promise<{ id: string }> }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id } = React.use(params);
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTab, setActiveTab] = useState<'design' | 'animate' | 'agent'>('design');
-  const [projectData, setProjectData] = useState<any>(null);
+  const [projectData, setProjectData] = useState<ProjectData | null>(() => {
+    const storedData = sessionStorage.getItem('current_project_data');
+    if (storedData) {
+      return JSON.parse(storedData) as ProjectData;
+    }
+    return null;
+  });
   const generatingRef = useRef<Set<number>>(new Set());
 
   // AI Agent Chat State
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isAgentThinking, setIsAgentThinking] = useState(false);
 
-  useEffect(() => {
-    const storedData = sessionStorage.getItem('current_project_data');
-    if (storedData) {
-      setProjectData(JSON.parse(storedData));
-    }
-  }, []);
+  // Project data is initialized via lazy state initializer above
 
   // Generate images for ALL slides that have imagePrompt but no imageSrc
   useEffect(() => {
     if (!projectData?.slides) return;
 
-    projectData.slides.forEach((slide: any, idx: number) => {
+    projectData.slides.forEach((slide: Slide, idx: number) => {
       if (slide.imagePrompt && !slide.imageSrc && !generatingRef.current.has(idx)) {
         generatingRef.current.add(idx);
 
@@ -53,7 +68,7 @@ export default function EditorPage({ params }: { params: { id: string } }) {
         img.src = imgUrl;
 
         img.onload = () => {
-          setProjectData((prev: any) => {
+          setProjectData((prev: ProjectData | null) => {
             if (!prev) return prev;
             const newData = JSON.parse(JSON.stringify(prev));
             newData.slides[idx].imageSrc = imgUrl;
@@ -68,13 +83,13 @@ export default function EditorPage({ params }: { params: { id: string } }) {
         };
       }
     });
-  }, [projectData?.slides?.length]); // only fire when slides are first loaded
+  }, [projectData?.slides]); // only fire when slides are first loaded
 
   const handleAgentChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || isAgentThinking) return;
 
-    const newMsgs = [...chatMessages, { role: 'user', content: chatInput }];
+    const newMsgs: ChatMessage[] = [...chatMessages, { role: 'user', content: chatInput }];
     setChatMessages(newMsgs);
     setChatInput('');
     setIsAgentThinking(true);
@@ -93,7 +108,7 @@ export default function EditorPage({ params }: { params: { id: string } }) {
       });
 
       if (!res.ok) throw new Error('Agent failed to respond');
-      const data = await res.json();
+      const data: ChatMessage = await res.json();
       setChatMessages([...newMsgs, data]);
     } catch (err) {
       console.error('Agent error:', err);
@@ -150,7 +165,7 @@ export default function EditorPage({ params }: { params: { id: string } }) {
 
         {/* Slide Thumbnails */}
         <aside className={styles.slideThumbnails}>
-          {(projectData?.slides || [1, 2, 3, 4, 5]).map((slide: any, idx: number) => (
+          {(projectData?.slides || [1, 2, 3, 4, 5]).map((slide: Slide, idx: number) => (
             <div
               key={idx}
               className={`${styles.thumbnailWrapper} ${activeSlide === idx ? styles.active : ''}`}
@@ -279,9 +294,8 @@ export default function EditorPage({ params }: { params: { id: string } }) {
               </form>
             </div>
           )}
+        </aside>
       </div>
-    </aside>
-      </div >
-    </div >
+    </div>
   );
 }

@@ -3,18 +3,35 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { MdArrowBack } from 'react-icons/md';
+import { supabase } from '@/lib/supabase';
 import styles from '../login/page.module.css'; // Reuse login styles
 
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Supabase auth will go here
-    console.log('Signup attempt', { name, email, password });
+    setIsLoading(true);
+    setError(null);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   return (
@@ -29,50 +46,52 @@ export default function SignupPage() {
         <div className={styles.logoMarkWrapper}>
           <Image src="/logo.png" alt="Papipoint Logo" width={48} height={48} style={{ borderRadius: '12px', boxShadow: '0 8px 24px rgba(230, 57, 70, 0.3)' }} />
         </div>
-        
+
         <h1 className={styles.title}>Create Account</h1>
-        <p className={styles.subtitle}>Start redesigning presentations with AI</p>
+        <p className={styles.subtitle}>Join Papipoint to transform your presentations</p>
+
+        {error && <div style={{ color: 'var(--primary)', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>{error}</div>}
 
         <form onSubmit={handleSignup} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="name">Full Name</label>
-            <input 
-              type="text" 
-              id="name" 
+            <input
+              type="text"
+              id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Doe" 
+              placeholder="Jane Doe"
               required
             />
           </div>
 
           <div className={styles.inputGroup}>
             <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
+            <input
+              type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com" 
+              placeholder="you@example.com"
               required
             />
           </div>
 
           <div className={styles.inputGroup}>
             <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
+            <input
+              type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••" 
+              placeholder="••••••••"
               required
               minLength={8}
             />
           </div>
 
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`}>
-            Create Account
+          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
