@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  MdTextFields, 
-  MdImage, 
-  MdFormatShapes, 
-  MdLayers, 
-  MdSave, 
-  MdDownload, 
-  MdUndo, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  MdTextFields,
+  MdImage,
+  MdFormatShapes,
+  MdLayers,
+  MdDownload,
+  MdUndo,
   MdRedo,
   MdPlayArrow,
   MdFormatBold,
@@ -16,31 +15,102 @@ import {
   MdFormatAlignLeft,
   MdFormatAlignCenter,
   MdFormatAlignRight,
-  MdPalette
+  MdPalette,
+  MdAutoAwesome
 } from 'react-icons/md';
 import styles from './page.module.css';
 
 export default function EditorPage({ params }: { params: { id: string } }) {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [activeTab, setActiveTab] = useState('design');
+  const [activeTab, setActiveTab] = useState<'design' | 'animate' | 'agent'>('design');
   const [projectData, setProjectData] = useState<any>(null);
+  const generatingRef = useRef<Set<number>>(new Set());
+
+  // AI Agent Chat State
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isAgentThinking, setIsAgentThinking] = useState(false);
 
   useEffect(() => {
-    // Load AI data if we just created a new project
     const storedData = sessionStorage.getItem('current_project_data');
     if (storedData) {
       setProjectData(JSON.parse(storedData));
     }
   }, []);
 
+  // Generate images for ALL slides that have imagePrompt but no imageSrc
+  useEffect(() => {
+    if (!projectData?.slides) return;
+
+    projectData.slides.forEach((slide: any, idx: number) => {
+      if (slide.imagePrompt && !slide.imageSrc && !generatingRef.current.has(idx)) {
+        generatingRef.current.add(idx);
+
+        const seed = Math.floor(Math.random() * 1000000);
+        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imagePrompt)}?width=1920&height=1080&nologo=true&seed=${seed}&model=flux`;
+
+        const img = new window.Image();
+        img.src = imgUrl;
+
+        img.onload = () => {
+          setProjectData((prev: any) => {
+            if (!prev) return prev;
+            const newData = JSON.parse(JSON.stringify(prev));
+            newData.slides[idx].imageSrc = imgUrl;
+            sessionStorage.setItem('current_project_data', JSON.stringify(newData));
+            return newData;
+          });
+        };
+
+        img.onerror = () => {
+          console.warn(`[Papipoint] Image generation failed for slide ${idx + 1}:`, imgUrl);
+          generatingRef.current.delete(idx); // allow retry
+        };
+      }
+    });
+  }, [projectData?.slides?.length]); // only fire when slides are first loaded
+
+  const handleAgentChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isAgentThinking) return;
+
+    const newMsgs = [...chatMessages, { role: 'user', content: chatInput }];
+    setChatMessages(newMsgs);
+    setChatInput('');
+    setIsAgentThinking(true);
+
+    try {
+      const customApiKey = localStorage.getItem('papipoint_custom_key');
+      const res = await fetch('/api/ai-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMsgs,
+          projectData,
+          customApiKey,
+          aiModel: 'anthropic/claude-3.5-sonnet' // Default for agent
+        })
+      });
+
+      if (!res.ok) throw new Error('Agent failed to respond');
+      const data = await res.json();
+      setChatMessages([...newMsgs, data]);
+    } catch (err) {
+      console.error('Agent error:', err);
+    } finally {
+      setIsAgentThinking(false);
+    }
+  };
+
   const currentSlideData = projectData?.slides?.[activeSlide];
+  const hasBackground = !!currentSlideData?.imageSrc;
 
   return (
     <div className={styles.editorContainer}>
       {/* Editor Header */}
       <header className={styles.editorHeader}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.documentTitle}>{projectData ? projectData.title : 'Q3 Marketing Plan - AI Generated'}</h1>
+          <h1 className={styles.documentTitle}>{projectData ? projectData.title : 'Untitled Presentation'}</h1>
           <span className={styles.saveStatus}>Saved just now</span>
         </div>
         <div className={styles.headerCenter}>
@@ -58,7 +128,7 @@ export default function EditorPage({ params }: { params: { id: string } }) {
       </header>
 
       <div className={styles.editorBody}>
-        {/* Left Toolbar - Tools */}
+        {/* Left Toolbar */}
         <aside className={styles.toolbarLeft}>
           <button className={`${styles.toolBtn} ${styles.active}`} title="Text">
             <MdTextFields size={24} />
@@ -78,16 +148,19 @@ export default function EditorPage({ params }: { params: { id: string } }) {
           </button>
         </aside>
 
-        {/* Slides Navigation (Thumbnails) */}
+        {/* Slide Thumbnails */}
         <aside className={styles.slideThumbnails}>
           {(projectData?.slides || [1, 2, 3, 4, 5]).map((slide: any, idx: number) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className={`${styles.thumbnailWrapper} ${activeSlide === idx ? styles.active : ''}`}
               onClick={() => setActiveSlide(idx)}
             >
               <span className={styles.slideNumber}>{idx + 1}</span>
-              <div className={styles.thumbnail}></div>
+              <div
+                className={styles.thumbnail}
+                style={slide?.imageSrc ? { backgroundImage: `url(${slide.imageSrc})`, backgroundSize: 'cover' } : {}}
+              />
             </div>
           ))}
           <button className={styles.addSlideBtn}>+ New Slide</button>
@@ -96,51 +169,61 @@ export default function EditorPage({ params }: { params: { id: string } }) {
         {/* Main Canvas Area */}
         <main className={styles.canvasArea}>
           <div className={styles.canvasWrapper}>
-            <div className={styles.slideCanvas}>
+            <div
+              className={`${styles.slideCanvas} ${hasBackground ? styles.hasBackground : ''}`}
+              style={hasBackground ? { backgroundImage: `url(${currentSlideData.imageSrc})` } : {}}
+            >
+              {/* Dark overlay for readability when background exists */}
+              {hasBackground && <div className={styles.canvasOverlay} />}
+
+              {/* Image generating indicator */}
+              {currentSlideData?.imagePrompt && !currentSlideData?.imageSrc && (
+                <div className={styles.imageGeneratingBadge}>
+                  <MdAutoAwesome size={14} />
+                  <span>AI painting background…</span>
+                </div>
+              )}
+
+              {/* Slide Content */}
               {currentSlideData ? (
-                <>
-                  <div className={styles.canvasElement} style={{ top: '15%', left: '10%', fontSize: '48px', fontWeight: 800 }}>
+                <div className={styles.slideContent}>
+                  <div className={`${styles.slideTitle} ${hasBackground ? styles.lightText : ''}`}>
                     {currentSlideData.title}
                   </div>
                   {currentSlideData.subtitle && (
-                    <div className={styles.canvasElement} style={{ top: '35%', left: '10%', fontSize: '24px', color: 'var(--foreground-muted)' }}>
+                    <div className={`${styles.slideSubtitle} ${hasBackground ? styles.lightTextMuted : ''}`}>
                       {currentSlideData.subtitle}
                     </div>
                   )}
                   {currentSlideData.bullets && currentSlideData.bullets.length > 0 && (
-                    <div className={styles.canvasElementBox} style={{ top: '50%', left: '10%', width: '80%', height: '40%', background: '#f1f3f5', borderRadius: '12px' }}>
-                      <ul style={{ padding: '24px', fontSize: '22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className={`${styles.bulletBox} ${hasBackground ? styles.bulletBoxDark : ''}`}>
+                      <ul className={styles.bulletList}>
                         {currentSlideData.bullets.map((bullet: string, i: number) => (
-                          <li key={i}>{bullet}</li>
+                          <li key={i} className={`${styles.bulletItem} ${hasBackground ? styles.lightText : ''}`}>
+                            {bullet}
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                </>
+                </div>
               ) : (
-                <>
-                  {/* Fallback Example elements */}
-                  <div className={styles.canvasElement} style={{ top: '15%', left: '10%', fontSize: '48px', fontWeight: 800 }}>
-                    Quarterly Marketing Review
+                /* Placeholder when no project data */
+                <div className={styles.slideContent}>
+                  <div className={styles.slideTitle}>Quarterly Marketing Review</div>
+                  <div className={styles.slideSubtitle}>Analyzing Q3 Performance & Q4 Strategy</div>
+                  <div className={styles.bulletBox}>
+                    <ul className={styles.bulletList}>
+                      <li className={styles.bulletItem}>+15% Growth in User Base</li>
+                      <li className={styles.bulletItem}>CAC reduced by $4.50</li>
+                      <li className={styles.bulletItem}>Retention up to 92%</li>
+                    </ul>
                   </div>
-              <div className={styles.canvasElement} style={{ top: '35%', left: '10%', fontSize: '24px', color: 'var(--foreground-muted)' }}>
-                Analyzing Q3 Performance & Q4 Strategy
-              </div>
-              <div className={styles.canvasElementBox} style={{ top: '50%', left: '10%', width: '40%', height: '30%', background: 'var(--primary-light)', borderRadius: '12px', border: '2px solid var(--primary)' }}>
-                {/* Chart Placeholder */}
-              </div>
-              <div className={styles.canvasElementBox} style={{ top: '50%', right: '10%', width: '35%', height: '30%', background: '#f1f3f5', borderRadius: '12px' }}>
-                <ul style={{ padding: '24px', fontSize: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <li>+15% Growth in User Base</li>
-                  <li>CAC reduced by $4.50</li>
-                  <li>Retention up to 92%</li>
-                </ul>
-              </div>
-                </>
+                </div>
               )}
             </div>
           </div>
-          
+
           <div className={styles.canvasControls}>
             <span>Zoom: 80%</span>
             <span>Fit to screen</span>
@@ -150,83 +233,55 @@ export default function EditorPage({ params }: { params: { id: string } }) {
         {/* Right Sidebar - Properties */}
         <aside className={styles.propertiesSidebar}>
           <div className={styles.propertiesTabs}>
-            <button 
+            <button
               className={`${styles.tabBtn} ${activeTab === 'design' ? styles.active : ''}`}
               onClick={() => setActiveTab('design')}
             >
               Design
             </button>
-            <button 
+            <button
               className={`${styles.tabBtn} ${activeTab === 'animate' ? styles.active : ''}`}
               onClick={() => setActiveTab('animate')}
             >
               Animate
             </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'agent' ? styles.active : ''}`}
+              onClick={() => setActiveTab('agent')}
+            >
+              AI Agent
+            </button>
           </div>
 
-          <div className={styles.propertiesContent}>
-            <div className={styles.propertyGroup}>
-              <h3>Typography</h3>
-              <select className={styles.select}>
-                <option>Google Sans Flex</option>
-                <option>Inter</option>
-                <option>Outfit</option>
-              </select>
-              
-              <div className={styles.row}>
-                <select className={styles.select} style={{ width: '60%' }}>
-                  <option>Bold</option>
-                  <option>Regular</option>
-                  <option>Light</option>
-                </select>
-                <input type="number" defaultValue={48} className={styles.input} style={{ width: '35%' }} />
+          {activeTab === 'agent' && (
+            <div className={styles.agentContainer}>
+              <div className={styles.chatHistory}>
+                {chatMessages.length === 0 && (
+                  <div className={styles.emptyChat}>
+                    <MdAutoAwesome size={32} style={{ opacity: 0.2, marginBottom: 12 }} />
+                    <p>I am your AI Co-Pilot. Ask me to refine slides, brainstorm points, or suggest designs!</p>
+                  </div>
+                )}
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={msg.role === 'user' ? styles.userMsg : styles.aiMsg}>
+                    {msg.content}
+                  </div>
+                ))}
+                {isAgentThinking && <div className={styles.aiMsg}>...</div>}
               </div>
-
-              <div className={styles.buttonGroup}>
-                <button className={styles.iconBtn}><MdFormatBold size={20} /></button>
-                <button className={styles.iconBtn}><MdFormatItalic size={20} /></button>
-                <div className={styles.divider}></div>
-                <button className={styles.iconBtn}><MdFormatAlignLeft size={20} /></button>
-                <button className={styles.iconBtn}><MdFormatAlignCenter size={20} /></button>
-                <button className={styles.iconBtn}><MdFormatAlignRight size={20} /></button>
-              </div>
+              <form onSubmit={handleAgentChat} className={styles.chatInputRow}>
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask AI..."
+                  className={styles.chatInput}
+                />
+              </form>
             </div>
-
-            <div className={styles.propertyGroup}>
-              <h3>Color</h3>
-              <div className={styles.colorPicker}>
-                <div className={styles.colorSwatch} style={{ background: '#1a1b1e' }}></div>
-                <span className={styles.colorHex}>#1a1b1e</span>
-                <button className={styles.iconBtn} style={{ marginLeft: 'auto' }}><MdPalette size={18} /></button>
-              </div>
-            </div>
-
-            <div className={styles.propertyGroup}>
-              <h3>Position</h3>
-              <div className={styles.row}>
-                <div className={styles.inputLabel}>
-                  <span>X</span>
-                  <input type="number" defaultValue={100} className={styles.input} />
-                </div>
-                <div className={styles.inputLabel}>
-                  <span>Y</span>
-                  <input type="number" defaultValue={150} className={styles.input} />
-                </div>
-              </div>
-              <div className={styles.row}>
-                <div className={styles.inputLabel}>
-                  <span>W</span>
-                  <input type="number" defaultValue={800} className={styles.input} />
-                </div>
-                <div className={styles.inputLabel}>
-                  <span>H</span>
-                  <input type="number" defaultValue={60} className={styles.input} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
+          )}
       </div>
-    </div>
+    </aside>
+      </div >
+    </div >
   );
 }

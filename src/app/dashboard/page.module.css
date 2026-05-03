@@ -1,18 +1,18 @@
 .header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 40px;
+  align-items: flex-start;
+  margin-bottom: 32px;
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
 .subtitle {
   color: var(--foreground-muted);
-  font-size: 1.1rem;
 }
 
 .statsGrid {
@@ -26,13 +26,12 @@
   padding: 24px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  background: white;
+  gap: 16px;
 }
 
 .statIconWrapper {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   background: var(--primary-light);
   border-radius: 12px;
   display: flex;
@@ -45,33 +44,34 @@
 }
 
 .statInfo h3 {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--foreground-muted);
   font-weight: 500;
   margin-bottom: 4px;
 }
 
 .statValue {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--foreground);
+  margin: 0;
 }
 
 .sectionHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
 }
 
 .sectionHeader h2 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .viewAll {
   color: var(--primary);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .viewAll:hover {
@@ -85,19 +85,20 @@
 }
 
 .projectCard {
-  background: white;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
 }
 
 .projectCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
 }
 
 .projectPreview {
-  height: 160px;
+  aspect-ratio: 16/9;
   background: #f1f3f5;
   padding: 16px;
   border-bottom: 1px solid var(--border);
@@ -116,7 +117,8 @@
 }
 
 .projectInfo h4 {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  font-weight: 600;
   margin-bottom: 4px;
 }
 
@@ -124,3 +126,283 @@
   font-size: 0.85rem;
   color: var(--foreground-muted);
 }
+
+/* Loading Overlay */
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingModal {
+  padding: 48px;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.loadingIcon {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.briefModal {
+  /* modal sizing handled inline */
+}
+
+/* ── Brief form elements ─────────── */
+.fieldLabel {
+  display: block;
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 8px;
+  color: var(--foreground);
+}
+
+.briefSelect {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f8f9fa;
+  font-family: inherit;
+  font-size: 0.92rem;
+  margin-bottom: 18px;
+  appearance: none;
+}
+
+.briefTextarea {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f8f9fa;
+  font-family: inherit;
+  font-size: 0.9rem;
+  min-height: 90px;
+  resize: vertical;
+  margin-bottom: 18px;
+}
+
+.fileDropZone {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 2px dashed var(--border);
+  background: #f8f9fa;
+  font-size: 0.9rem;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.fileDropZone:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ── Output format buttons ─────────── */
+.formatBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--foreground-muted);
+}
+
+.formatBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.formatBtnActive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border-radius: 10px;
+  border: 2px solid var(--primary);
+  background: var(--primary-light);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+/* ── Brief action buttons ──────────── */
+.cancelBtn {
+  padding: 11px 22px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: white;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.submitBtn:hover {
+  background: var(--primary-hover);
+}
+
+/* ── Loading Modal redesign ────────── */
+.loadingModal {
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 460px;
+  width: 100%;
+}
+
+.loadingIconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 8px 24px rgba(99, 77, 255, 0.35);
+}
+
+/* ── Step tracker ──────────────────── */
+.stepsTrack {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  margin: 0 auto;
+  max-width: 380px;
+}
+
+.stepRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.stepDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.stepPending {
+  background: #e9ecef;
+  color: #aaa;
+  border: 2px solid #ddd;
+}
+
+.stepCurrent {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 0 0 4px var(--primary-light);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.stepDone {
+  background: #22c55e;
+  color: white;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 4px var(--primary-light); }
+  50%       { box-shadow: 0 0 0 8px var(--primary-light); }
+}
+
+.stepLabel {
+  font-size: 0.68rem;
+  color: var(--foreground-muted);
+  margin-top: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.stepLabelActive {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.stepConnector {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e9ecef;
+  z-index: 0;
+}
+
+.stepConnectorDone {
+  background: #22c55e;
+}
+

@@ -1,17 +1,17 @@
+/* ================================================
+   EDITOR - FULL LAYOUT
+   ================================================ */
 .editorContainer {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: var(--background);
-  /* The layout wrapper inside dashboard has padding, 
-     but for a full-screen editor, we might want to override that, 
-     or just let it fill the available space. 
-     Since this is inside the dashboard mainContent which has padding, 
-     let's override standard behavior for the editor to look like a real app. */
-  margin: -40px; /* Counteract the padding of the layout */
+  margin: -40px;
   width: calc(100% + 80px);
+  overflow: hidden;
 }
 
+/* ---- Header ---- */
 .editorHeader {
   height: 60px;
   background: white;
@@ -20,6 +20,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .headerLeft {
@@ -44,6 +46,12 @@
   gap: 8px;
 }
 
+.headerRight {
+  display: flex;
+  gap: 12px;
+}
+
+/* ---- Buttons ---- */
 .iconBtn {
   background: transparent;
   border: none;
@@ -61,11 +69,6 @@
 .iconBtn:hover {
   background: var(--surface-hover);
   color: var(--foreground);
-}
-
-.headerRight {
-  display: flex;
-  gap: 12px;
 }
 
 .secondaryBtn {
@@ -101,15 +104,18 @@
   background: var(--primary-hover);
 }
 
+/* ---- Body Layout ---- */
 .editorBody {
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
-/* Toolbar */
+/* ---- Left Toolbar ---- */
 .toolbarLeft {
   width: 72px;
+  flex-shrink: 0;
   background: white;
   border-right: 1px solid var(--border);
   display: flex;
@@ -145,12 +151,13 @@
   color: var(--primary);
 }
 
-/* Thumbnails */
+/* ---- Slide Thumbnails ---- */
 .slideThumbnails {
   width: 200px;
+  flex-shrink: 0;
   background: #f8f9fa;
   border-right: 1px solid var(--border);
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -168,16 +175,19 @@
   color: var(--foreground-muted);
   font-weight: 500;
   padding-top: 4px;
+  min-width: 16px;
 }
 
 .thumbnail {
   flex: 1;
   aspect-ratio: 16 / 9;
   background: white;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  background-size: cover;
+  background-position: center;
 }
 
 .thumbnailWrapper.active .thumbnail {
@@ -189,11 +199,12 @@
   background: transparent;
   border: 1px dashed var(--border);
   color: var(--foreground-muted);
-  padding: 12px;
+  padding: 10px;
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.85rem;
 }
 
 .addSlideBtn:hover {
@@ -202,51 +213,163 @@
   background: var(--primary-light);
 }
 
-/* Canvas Area */
+/* ---- Canvas Area ---- */
 .canvasArea {
   flex: 1;
+  min-width: 0;
   background: #e9ecef;
   display: flex;
   flex-direction: column;
-  position: relative;
   overflow: hidden;
 }
 
 .canvasWrapper {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 32px;
   overflow: auto;
 }
 
+/* The actual slide - strict 16:9 using a container trick */
 .slideCanvas {
-  width: 960px;
-  height: 540px;
+  /* Take up as much width as possible, but stay 16:9 */
+  width: min(calc(100% - 64px), calc((100vh - 200px) * 16 / 9));
+  aspect-ratio: 16 / 9;
   background: white;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.slideCanvas.hasBackground {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.canvasOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.35) 100%);
+  z-index: 1;
+}
+
+/* Badge that shows while image is generating */
+.imageGeneratingBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ---- Slide content layout (flow-based, not absolute) ---- */
+.slideContent {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8% 10%;
+  gap: 4%;
   overflow: hidden;
 }
 
-.canvasElement {
-  position: absolute;
-  cursor: pointer;
+.slideTitle {
+  font-size: clamp(24px, 4.5vw, 56px);
+  font-weight: 800;
   line-height: 1.2;
+  color: #1a1b1e;
+  word-break: break-word;
+  letter-spacing: -0.02em;
 }
 
-.canvasElement:hover {
-  outline: 1px dashed var(--primary);
+.slideSubtitle {
+  font-size: clamp(14px, 2.2vw, 28px);
+  color: var(--foreground-muted);
+  line-height: 1.5;
+  word-break: break-word;
+  font-weight: 500;
 }
 
-.canvasElementBox {
-  position: absolute;
-  cursor: pointer;
+.bulletBox {
+  background: rgba(241, 243, 245, 0.95);
+  border-radius: 16px;
+  padding: 5% 6%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
-.canvasElementBox:hover {
-  outline: 2px dashed var(--primary);
+.bulletBoxDark {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+.bulletList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bulletItem {
+  font-size: clamp(13px, 1.8vw, 24px);
+  color: #1a1b1e;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-weight: 450;
+}
+
+.bulletItem::before {
+  content: '•';
+  color: var(--primary);
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 1.4em;
+}
+
+/* Text colour helpers for dark backgrounds */
+.lightText {
+  color: #ffffff !important;
+}
+
+.lightTextMuted {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .canvasControls {
@@ -259,20 +382,24 @@
   padding: 0 24px;
   font-size: 0.85rem;
   color: var(--foreground-muted);
+  flex-shrink: 0;
 }
 
-/* Properties Sidebar */
+/* ---- Properties Sidebar ---- */
 .propertiesSidebar {
-  width: 280px;
+  width: 260px;
+  flex-shrink: 0;
   background: white;
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .propertiesTabs {
   display: flex;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .tabBtn {
@@ -292,41 +419,43 @@
 }
 
 .propertiesContent {
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .propertyGroup h3 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--foreground-muted);
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
+  margin: 0 0 10px 0;
 }
 
-.select, .input {
+.select,
+.input {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   background: #f8f9fa;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.select:focus, .input:focus {
+.select:focus,
+.input:focus {
   outline: none;
   border-color: var(--primary);
 }
 
 .row {
   display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .buttonGroup {
@@ -342,43 +471,119 @@
   width: 1px;
   height: 24px;
   background: var(--border);
-  margin: 0 8px;
+  margin: 0 6px;
 }
 
 .colorPicker {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .colorSwatch {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .colorHex {
   font-family: monospace;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .inputLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
 .inputLabel span {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--foreground-muted);
-  width: 16px;
+  width: 14px;
+  flex-shrink: 0;
 }
 
 .inputLabel input {
   margin-bottom: 0;
+}
+
+/* ---- AI Agent Sidebar ---- */
+.agentContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  gap: 16px;
+}
+
+.chatHistory {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.emptyChat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--foreground-muted);
+  font-size: 0.85rem;
+  padding: 20px;
+}
+
+.userMsg {
+  align-self: flex-end;
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 12px 12px 2px 12px;
+  font-size: 0.88rem;
+  max-width: 85%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.aiMsg {
+  align-self: flex-start;
+  background: #f1f3f5;
+  color: var(--foreground);
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 2px;
+  font-size: 0.88rem;
+  max-width: 85%;
+  line-height: 1.4;
+  border: 1px solid var(--border);
+}
+
+.chatInputRow {
+  flex-shrink: 0;
+}
+
+.chatInput {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.chatInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
