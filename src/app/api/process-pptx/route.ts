@@ -120,39 +120,47 @@ async function callWithFallback(
   throw new Error(`All models failed. Last error: ${lastError}`);
 }
 
-// ── Step 1: Extract Brand Essence (IMPROVED - Find REAL brand) ──────────────────
+// ── Step 1: Extract Brand Essence (FIXED - IGNORE GARBLED TEXT) ────────────────────────────────
 async function extractBrandEssence(apiKey: string, rawText: string, modelId: string): Promise<BrandEssence> {
-  const systemPrompt = `You are a WORLD-CLASS brand strategist. Analyze the content and extract the EXACT brand identity in JSON format.
+  const systemPrompt = `You are a WORLD-CLASS brand strategist. Your job is to find the EXACT brand name from the content.
 
-CRITICAL INSTRUCTIONS:
-- Find the ACTUAL brand name that owns this presentation
-- Look for: Logo text, header/footer text, copyright notices, consistent branding
-- If you see garbled text like "Mercusuar" or "Berkarya", IGNORE IT - find the REAL brand
-- Look for: "Digital Agency", "Creative Agency", or similar in the content
-- The brand name should be 1-3 words MAX, clear and professional
+🚨 CRITICAL RULES - READ CAREFULLY:
+1. IGNORE any text with garbled characters like "Mercusuar", "Berkarya", "Mrcusr", etc.
+2. These are OCR/PDF extraction ERRORS - they are NOT real brand names!
+3. Look for CLEAN, readable text that repeats across slides
+4. Look for: Logo text, header text, footer text, copyright notices
+5. The brand name should be 1-3 CLEAN words (e.g., "Nike", "Apple", "Imajinari")
+
+✅ GOOD examples: "Digital Vision", "Creative Agency", "Pacific Digital"
+❌ BAD examples: "Mercusuar", "Berkarya", "Mrcusr", "0o44zQ"
 
 OUTPUT: Valid JSON only, no markdown, no commentary.
 
 JSON SCHEMA:
 {
-  "brandName": "EXACT brand name (1-3 words, e.g., 'Pacific Digital', 'Creative Visions')",
-  "tagline": "Powerful 5-8 word tagline that captures the brand's soul",
-  "colors": ["#color1 with hex", "#color2 with hex", "#color3 with hex"],
-  "mood": "2-3 words max (e.g., 'Bold & Dynamic', 'Calm & Trustworthy')",
-  "style": "Visual style (e.g., 'Minimalist Luxury', 'Bold Street Art', 'Clean Corporate')",
+  "brandName": "CLEAN brand name (1-3 words, NO garbled characters!)",
+  "tagline": "Powerful 5-8 word tagline",
+  "colors": ["#hex1", "#hex2", "#hex3"],
+  "mood": "2-3 words (e.g., 'Bold & Dynamic')",
+  "style": "Visual style (e.g., 'Minimalist Luxury')",
   "values": ["value1", "value2", "value3"],
-  "audience": "Target audience description",
-  "industry": "Specific industry (e.g., 'Digital Marketing Agency', 'Creative Design Studio')"
+  "audience": "Target audience",
+  "industry": "Specific industry"
 }`;
 
-  const userPrompt = `This is a presentation for a DIGITAL/CREATIVE AGENCY. Find their REAL brand name and essence.
+  const userPrompt = `Find the REAL, CLEAN brand name in this content.
 
-Look for:
-- "Digital Agency", "Creative", "Vision 2026", agency names
+🚨 IGNORE garbled text like: "Mercusuar", "Berkarya", "Creative Berkarya", etc.
+🚨 These are PDF/OCR errors - NOT real brand names!
+
+Look for CLEAN, readable text that appears multiple times:
 - Headers, footers, logos
-- IGNORE garbled text - find clean, professional brand names
+- Copyright notices (© 2026 Brand Name)
+- Consistent text across slides
 
-CONTENT:
+If you see garbled text, SKIP IT and find the clean text!
+
+RAW CONTENT:
 ${rawText.substring(0, 8000)}`;
 
   const res = await fetch(OPENROUTER_URL, {
@@ -182,9 +190,14 @@ ${rawText.substring(0, 8000)}`;
   const rawJson = data.choices?.[0]?.message?.content?.trim() || '';
 
   try {
-    return JSON.parse(rawJson) as BrandEssence;
+    const parsed = JSON.parse(rawJson) as BrandEssence;
+    // Validate: if brand name contains garbled characters, use fallback
+    if (parsed.brandName && /[a-zA-Z\s]{3,}/.test(parsed.brandName)) {
+      return parsed;
+    }
+    throw new Error('Garbled brand name detected');
   } catch {
-    // Return defaults if parsing fails
+    // Return defaults if parsing fails or garbled
     return {
       brandName: 'Digital Creative Agency',
       tagline: 'Transforming Visions Into Reality',
@@ -215,48 +228,54 @@ async function designSlides(
 
   const personaGuide = personaGuides[persona] || personaGuides.corporate;
 
-  const systemPrompt = `You are a REBEL Creative Director who DESTROYS boring templates. You create presentations that make audiences GASP and REMEMBER.
+  const systemPrompt = `You are a REBEL Creative Director who HATES boring templates. You create presentations that make audiences GASP.
 
-BRAND YOU MUST EMBODY (MEMORIZE THIS COMPLETELY):
+🚨 FORGET EVERYTHING YOU KNOW ABOUT "PRESENTATIONS" 🚨
+This is NOT a presentation. It's a WEAPON. A MANIFESTO. A MOVEMENT.
+
+BRAND YOU MUST BECOME (MEMORIZE THIS - IT'S YOUR DNA NOW):
 - Brand: ${brand.brandName}
 - Tagline: ${brand.tagline}
+- Core Values: ${brand.values.join(', ')}
 - Colors: ${brand.colors.join(', ')}
 - Mood: ${brand.mood}
 - Style: ${brand.style}
-- Values: ${brand.values.join(', ')}
-- Audience: ${brand.audience}
 - Industry: ${brand.industry}
+- Audience: ${brand.audience}
 
-YOUR SECRET WEAPONS:
-1. ZERO TEMPLATES - Every slide is UNIQUE, custom-crafted for ${brand.brandName}
-2. STEAL ATTENTION - Titles that STOP people mid-scroll
-3. VISUAL STORYTELLING - Every slide tells a compelling story about ${brand.brandName}
-4. BRAND OBSESSION - Every pixel screams "${brand.brandName}"
-5. COLOR DISCIPLINE - ONLY use: ${brand.colors.join(', ')}
-6. KILL BORING - No "Company Overview", no "Q3 Results", no generic crap
+YOUR MISSION: DESTROY TEMPLATES FOREVER
+❌ NO "Company Overview" slides
+❌ NO "Q3 Results" slides  
+❌ NO generic bullet points
+❌ NO stock photo vibes
+❌ NO corporate speak
 
-TITLE RULES (POWERFUL & SHORT - MAX 5 WORDS):
-✅ "Chaos → Clarity" ✅ "The $4B Mistake" ✅ "Why Everyone's Wrong"
-❌ "Company Overview" ❌ "Q3 Results" ❌ "Our Services"
+✅ EVERY SLIDE IS A PUNCH TO THE GUT
+✅ Titles that make people STOP SCROLLING
+✅ Bullets that sound like WAR CRIES
+✅ Visuals that BURN INTO MEMORY
+✅ Words that HAUNT people at 3AM
 
-SUBTITLE RULES (ONE PUNCHY SENTENCE, MAX 12 WORDS):
+TITLE RULES (2-4 WORDS MAX - MAKE THEM BLEED):
+✅ "Chaos → Clarity" ✅ "The $4B Mistake" ✅ "Why Everyone's Wrong" ✅ "Die Trying"
+❌ "Company Overview" ❌ "Our Services" ❌ "Q3 Results"
+
+SUBTITLE RULES (ONE SENTENCE - MAKE IT HURT):
 ✅ "While competitors stagnate, we architect tomorrow"
 ✅ "Three shifts that'll redefine your entire industry"
-❌ "A presentation about our goals"
+✅ "The revolution starts when you stop apologizing"
 
-BULLET RULES (3-5 PER SLIDE, ACTION-ORIENTED, USE STRONG VERBS):
+BULLET RULES (3-4 MAX - ACTION VERBS ONLY):
 ✅ "Orchestrate 340% ROI through AI engines"
 ✅ "Slash 89% overhead with autonomous workflows"
+✅ "Annihilate competitors with predictive algorithms"
 ❌ "We provide good service" ❌ "Our team is great"
 
-IMAGE PROMPT RULES (CRITICAL - KEEP UNDER 150 CHARS!):
-- Format: "[Subject], [MAX 2 colors], [lighting], [mood], 16:9"
-✅ "Futuristic office, navy blue + coral, golden hour, bold, 16:9"
-✅ "Abstract shapes, white + navy, soft shadows, calm, 16:9"
-❌ Long complex prompts that break URLs
-❌ Generic "business meeting" photos
+IMAGE PROMPT RULES (KEEP UNDER 150 CHARS - ONLY 2 BRAND COLORS):
+✅ "Futuristic glass office, navy blue + coral, golden hour, bold, 16:9"
+✅ "Abstract geometric, white + navy, soft shadows, calm, 16:9"
 
-NARRATIVE STRUCTURE (Choose the BEST for ${brand.brandName}):
+NARRATIVE STRUCTURE (PICK ONE - COMMIT TO IT):
 1. **The Hero's Journey**: Ordinary world → Call to adventure → Challenges → Transformation → New reality
 2. **Problem-Solution**: Agitate pain → Diagnose root → Prescribe solution → Prove it works
 3. **The Revelation**: Common myth → Evidence that destroys it → New paradigm → Call to action
@@ -266,10 +285,10 @@ OUTPUT: Valid JSON ONLY. Be RADICALLY creative while OBSESSING over brand: ${bra
 
 JSON SCHEMA:
 {
-  "title": "Master Title (powerful, brand-aligned, 2-5 words)",
+  "title": "Master Title (brand-aligned, POWERFUL, 2-5 words)",
   "slides": [
     {
-      "title": "Slide Title (MAX 5 words, POWERFUL)",
+      "title": "Slide Title (MAX 5 words, POWERFUL!)",
       "subtitle": "One punchy sentence (MAX 12 words)",
       "bullets": ["Point 1 (action verb!)", "Point 2", "Point 3"],
       "imagePrompt": "Simple visual, MAX 2 colors from ${brand.colors.join(', ')}, lighting, mood, 16:9 (UNDER 150 chars!)"
@@ -292,7 +311,7 @@ ${rawText.substring(0, 14000)}
 
 YOUR MISSION:
 1. Create a COHESIVE NARRATIVE that RADICALLY transforms this content
-2. Every slide MUST reflect the colors ${brand.colors.join(', ')} and mood "${brand.mood}"
+2. Every slide MUST scream "${brand.brandName}" - colors ${brand.colors.join(', ')}, mood "${brand.mood}"
 3. BREAK ALL TEMPLATES - be RADICALLY different for ${brand.brandName}
 4. Image prompts: ONLY 2 colors from ${brand.colors.join(', ')} - KEEP UNDER 150 chars!
 5. This must feel like ${brand.brandName}'s SOUL transformed into slides`;
@@ -311,7 +330,7 @@ YOUR MISSION:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.95, // MAXIMUM creativity
+      temperature: 1.0, // ABSOLUTE MAXIMUM creativity - no limits
       response_format: { type: 'json_object' },
     }),
   });
