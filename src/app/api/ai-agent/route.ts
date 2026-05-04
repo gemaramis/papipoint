@@ -34,7 +34,7 @@ INSTRUCTIONS:
         'X-Title': 'Papipoint AI Agent',
       },
       body: JSON.stringify({
-        model: aiModel || 'google/gemini-2.0-flash-exp:free',
+        model: aiModel || 'google/gemma-4-26b-a4b-it:free',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages
