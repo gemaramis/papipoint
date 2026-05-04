@@ -3,7 +3,7 @@ import { parseOffice } from 'officeparser';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Verified working models on OpenRouter (removed 404ing Claude)
+// Verified working models on OpenRouter
 const MODELS: Record<string, { id: string; isVision: boolean; label: string }> = {
   'gpt4o': { id: 'openai/gpt-4o', isVision: true, label: 'GPT-4o' },
   'gpt41': { id: 'openai/gpt-4.1', isVision: true, label: 'GPT-4.1' },
@@ -89,7 +89,7 @@ async function callOpenRouter(
   return data.choices?.[0]?.message?.content?.trim() || '';
 }
 
-// ── Retry wrapper with model fallback (using callback pattern) ──────────────────
+// ── Retry wrapper with model fallback ────────────────────────────────────────
 const FALLBACK_ORDER = ['gpt41', 'gemma', 'nemotron', 'deepseek', 'llama'];
 
 async function callWithFallback(
@@ -120,30 +120,37 @@ async function callWithFallback(
   throw new Error(`All models failed. Last error: ${lastError}`);
 }
 
-// ── Step 1: Extract Brand Essence (IMPROVED) ────────────────────────────────
+// ── Step 1: Extract Brand Essence (IMPROVED - Find REAL brand) ──────────────────
 async function extractBrandEssence(apiKey: string, rawText: string, modelId: string): Promise<BrandEssence> {
-  const systemPrompt = `You are a WORLD-CLASS brand strategist who has worked with Nike, Apple, and Tesla. Your job is to extract the EXACT brand name and essence from the content.
+  const systemPrompt = `You are a WORLD-CLASS brand strategist. Analyze the content and extract the EXACT brand identity in JSON format.
 
-CRITICAL RULES:
-- The brand name MUST be EXACT - look for logos, headers, footers, consistent text at top of slides
-- If "Mercusuar" or garbled text appears, IGNORE IT - find the REAL brand name
-- Look for: Logo text, header text that repeats, copyright notices, consistent branding
+CRITICAL INSTRUCTIONS:
+- Find the ACTUAL brand name that owns this presentation
+- Look for: Logo text, header/footer text, copyright notices, consistent branding
+- If you see garbled text like "Mercusuar" or "Berkarya", IGNORE IT - find the REAL brand
+- Look for: "Digital Agency", "Creative Agency", or similar in the content
+- The brand name should be 1-3 words MAX, clear and professional
 
-OUTPUT: Valid JSON only, no markdown.
+OUTPUT: Valid JSON only, no markdown, no commentary.
 
 JSON SCHEMA:
 {
-  "brandName": "EXACT brand name (e.g., 'Nike', 'Apple', 'Imajinari')",
+  "brandName": "EXACT brand name (1-3 words, e.g., 'Pacific Digital', 'Creative Visions')",
   "tagline": "Powerful 5-8 word tagline that captures the brand's soul",
-  "colors": ["#hexcolor1", "#hexcolor2", "#hexcolor3"],
-  "mood": "2-3 words (e.g., 'Bold & Disruptive')",
-  "style": "Visual style (e.g., 'Minimalist Luxury')",
+  "colors": ["#color1 with hex", "#color2 with hex", "#color3 with hex"],
+  "mood": "2-3 words max (e.g., 'Bold & Dynamic', 'Calm & Trustworthy')",
+  "style": "Visual style (e.g., 'Minimalist Luxury', 'Bold Street Art', 'Clean Corporate')",
   "values": ["value1", "value2", "value3"],
-  "audience": "Who they target",
-  "industry": "Specific industry"
+  "audience": "Target audience description",
+  "industry": "Specific industry (e.g., 'Digital Marketing Agency', 'Creative Design Studio')"
 }`;
 
-  const userPrompt = `Find the REAL brand name and essence in this content. IGNORE garbled text like "Mercusuar" - find what's actually on their slides.
+  const userPrompt = `This is a presentation for a DIGITAL/CREATIVE AGENCY. Find their REAL brand name and essence.
+
+Look for:
+- "Digital Agency", "Creative", "Vision 2026", agency names
+- Headers, footers, logos
+- IGNORE garbled text - find clean, professional brand names
 
 CONTENT:
 ${rawText.substring(0, 8000)}`;
@@ -179,19 +186,19 @@ ${rawText.substring(0, 8000)}`;
   } catch {
     // Return defaults if parsing fails
     return {
-      brandName: 'Brand',
-      tagline: 'Innovation in Action',
+      brandName: 'Digital Creative Agency',
+      tagline: 'Transforming Visions Into Reality',
       colors: ['#1a237e', '#ff6f61', '#ffffff'],
-      mood: 'Professional & Bold',
-      style: 'Modern Corporate',
-      values: ['Innovation', 'Excellence', 'Trust'],
-      audience: 'Business professionals',
-      industry: 'Technology',
+      mood: 'Bold & Visionary',
+      style: 'Modern Creative',
+      values: ['Creativity', 'Innovation', 'Excellence'],
+      audience: 'Businesses seeking creative services',
+      industry: 'Digital Creative Agency',
     };
   }
 }
 
-// ── Step 2: Design Slides (WILDLY CREATIVE) ───────────────────────────
+// ── Step 2: Design Slides (EXTREMELY CREATIVE) ───────────────────────────
 async function designSlides(
   apiKey: string,
   rawText: string,
@@ -201,77 +208,82 @@ async function designSlides(
 ): Promise<AIResponse> {
   const personaGuides: Record<string, string> = {
     corporate: 'Formal, Polished, Authoritative. Executive-level vocabulary, ROI-focused.',
-    creative: 'WILDLY CREATIVE. Use RICH METAPHORS, vivid imagery, cinematic language. Push boundaries!',
+    creative: 'WILDLY CREATIVE. Use RICH METAPHORS, vivid imagery, cinematic language. SHATTER expectations!',
     tech: 'Disruptive, Edgy, Futuristic. ANTI-CORPORATE. Innovation-obsessed, tech-optimist.',
     minimalist: 'Clean, Direct, Essential. RADICAL minimalism. Bold white space, zero-fluff.',
   };
 
   const personaGuide = personaGuides[persona] || personaGuides.corporate;
 
-  const systemPrompt = `You are a REBEL Creative Director who HATES boring templates. You create presentations that make audiences GASP.
+  const systemPrompt = `You are a REBEL Creative Director who DESTROYS boring templates. You create presentations that make audiences GASP and REMEMBER.
 
-THE OLD WAY: Boring templates, generic bullets, stock photos.
-YOUR WAY: BREAK the mold. Shock. Inspire. TRANSFORM.
-
-BRAND YOU MUST EMBODY (MEMORIZE THIS):
+BRAND YOU MUST EMBODY (MEMORIZE THIS COMPLETELY):
 - Brand: ${brand.brandName}
 - Tagline: ${brand.tagline}
-- Core Values: ${brand.values.join(', ')}
 - Colors: ${brand.colors.join(', ')}
 - Mood: ${brand.mood}
 - Style: ${brand.style}
-- Industry: ${brand.industry}
+- Values: ${brand.values.join(', ')}
 - Audience: ${brand.audience}
+- Industry: ${brand.industry}
 
 YOUR SECRET WEAPONS:
-1. NO TEMPLATES - Every slide is UNIQUE, custom-crafted
+1. ZERO TEMPLATES - Every slide is UNIQUE, custom-crafted for ${brand.brandName}
 2. STEAL ATTENTION - Titles that STOP people mid-scroll
-3. VISUAL STORYTELLING - Every slide tells a story
+3. VISUAL STORYTELLING - Every slide tells a compelling story about ${brand.brandName}
 4. BRAND OBSESSION - Every pixel screams "${brand.brandName}"
-5. COLOR DISCPLINE - ONLY use: ${brand.colors.join(', ')}
+5. COLOR DISCIPLINE - ONLY use: ${brand.colors.join(', ')}
+6. KILL BORING - No "Company Overview", no "Q3 Results", no generic crap
 
-TITLE RULES (POWERFUL & SHORT):
+TITLE RULES (POWERFUL & SHORT - MAX 5 WORDS):
 ✅ "Chaos → Clarity" ✅ "The $4B Mistake" ✅ "Why Everyone's Wrong"
-❌ "Company Overview" ❌ "Q3 Results"
+❌ "Company Overview" ❌ "Q3 Results" ❌ "Our Services"
 
-SUBTITLE RULES (ONE PUNCHY SENTENCE):
+SUBTITLE RULES (ONE PUNCHY SENTENCE, MAX 12 WORDS):
 ✅ "While competitors stagnate, we architect tomorrow"
 ✅ "Three shifts that'll redefine your entire industry"
 ❌ "A presentation about our goals"
 
-BULLET RULES (3-5 MAX, ACTION-ORIENTED):
+BULLET RULES (3-5 PER SLIDE, ACTION-ORIENTED, USE STRONG VERBS):
 ✅ "Orchestrate 340% ROI through AI engines"
 ✅ "Slash 89% overhead with autonomous workflows"
-❌ "We provide good service"
+❌ "We provide good service" ❌ "Our team is great"
 
 IMAGE PROMPT RULES (CRITICAL - KEEP UNDER 150 CHARS!):
-- Format: "[Subject], [2 colors MAX], [lighting], [mood], 16:9"
-✅ "Futuristic glass office, navy blue + coral, golden hour, bold, 16:9"
-✅ "Abstract geometric, white + navy, soft shadows, calm, 16:9"
+- Format: "[Subject], [MAX 2 colors], [lighting], [mood], 16:9"
+✅ "Futuristic office, navy blue + coral, golden hour, bold, 16:9"
+✅ "Abstract shapes, white + navy, soft shadows, calm, 16:9"
 ❌ Long complex prompts that break URLs
+❌ Generic "business meeting" photos
+
+NARRATIVE STRUCTURE (Choose the BEST for ${brand.brandName}):
+1. **The Hero's Journey**: Ordinary world → Call to adventure → Challenges → Transformation → New reality
+2. **Problem-Solution**: Agitate pain → Diagnose root → Prescribe solution → Prove it works
+3. **The Revelation**: Common myth → Evidence that destroys it → New paradigm → Call to action
+4. **Future Back**: Vision of 2030 → Gap analysis → Bridge the divide → Start today
 
 OUTPUT: Valid JSON ONLY. Be RADICALLY creative while OBSESSING over brand: ${brand.brandName}
 
 JSON SCHEMA:
 {
-  "title": "Master Title (brand-aligned, POWERFUL, 2-5 words)",
+  "title": "Master Title (powerful, brand-aligned, 2-5 words)",
   "slides": [
     {
       "title": "Slide Title (MAX 5 words, POWERFUL)",
       "subtitle": "One punchy sentence (MAX 12 words)",
       "bullets": ["Point 1 (action verb!)", "Point 2", "Point 3"],
-      "imagePrompt": "Simple visual, 2 colors MAX, lighting, mood, 16:9 (UNDER 150 chars!)"
+      "imagePrompt": "Simple visual, MAX 2 colors from ${brand.colors.join(', ')}, lighting, mood, 16:9 (UNDER 150 chars!)"
     }
   ]
 }`;
 
-  const userPrompt = `You are designing for ${brand.brandName} - a ${brand.industry} company targeting ${brand.audience}.
+  const userPrompt = `You are redesigning for ${brand.brandName} - a ${brand.industry} targeting ${brand.audience}.
 
 THEIR ESSENCE:
 - Tagline: "${brand.tagline}"
 - Mood: ${brand.mood}
 - Style: ${brand.style}
-- Colors to USE: ${brand.colors.join(', ')}
+- Colors to USE EXCLUSIVELY: ${brand.colors.join(', ')}
 
 PERSONA: ${personaGuide}
 
@@ -279,12 +291,11 @@ RAW CONTENT TO TRANSFORM (make it UNRECOGNIZABLE in a good way):
 ${rawText.substring(0, 14000)}
 
 YOUR MISSION:
-1. Create a NARRATIVE ARC (Title → Problem → Solution → Proof → Future → CTA)
-2. Every slide MUST scream "${brand.brandName}" - colors ${brand.colors.join(', ')}, mood "${brand.mood}"
-3. BREAK ALL TEMPLATES - be RADICALLY different
+1. Create a COHESIVE NARRATIVE that RADICALLY transforms this content
+2. Every slide MUST reflect the colors ${brand.colors.join(', ')} and mood "${brand.mood}"
+3. BREAK ALL TEMPLATES - be RADICALLY different for ${brand.brandName}
 4. Image prompts: ONLY 2 colors from ${brand.colors.join(', ')} - KEEP UNDER 150 chars!
-
-OUTPUT: Valid JSON only. No templates. Be WILDLY creative for ${brand.brandName}!`;
+5. This must feel like ${brand.brandName}'s SOUL transformed into slides`;
 
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
